@@ -34,5 +34,17 @@ This system does seem reliable but I do not claim it is completely bullet-proof!
 In case it messes up the tracking, your records are offset by a small amount (actions are executed one or two records after/before). There is currently no such situation known fortunately but I take no liability for any failures!
 If you manage to break it please notify me about it and provide me with information of what you've done (through issues) and I try to fix this:)
 
+##API
+The API for developers is very simple.
+Add the UndoPro dependency and then use UndoProManager to interact with the system. Important elements:
+- RecordOpterationAndPerform - Accepts the actions for undo/redo along with a label and adds them as a record. Additionally it will perform the redo action.
+- RecordOperation (2 overloads) - Accepts the actions for undo/redo along with a label and adds them as a record. Use if you already manually performed the action
+- OnUndoPerformed Callback - called when undo was performed. Passes all undone records, which can be multiple if they were grouped.
+- OnRedoPerformed Callback - called when redo was performed. Passes all redone records, which can be multiple if they were grouped.
+- OnAddUndoRecord Callback - called when a record was added, both from UndoPro and the default system. Passes it's name and whether it is considered 'important' (Some records clear the redo stack when added, some, like the Selection Change, do not). This could also relate to whether the record added is included in the last group of record or if it opened a new group (uncertain).
+- EnableUndoPro/DisableUndoPro - toggle the state of the system. Not recommended to disable as it will simply create a hole in the record and mess up previous records!
+
+Recommendation: If you calculated something or performed any operation with an intermediate result, it is very easy to set this up provided the result is serializable. Instead of recalculating in the undo/redo actions just set the previous serializable result in the undo action and the new one in the redo action. Done!
+
 ##Author and License
 This extension was created by [Seneral](https://community.unity.com/t5/user/viewprofilepage/user-id/615187) and is published under the GNU license (further specified in LICENSE.md)
