@@ -34,6 +34,11 @@ This system does seem reliable but I do not claim it is completely bullet-proof!
 The worst case that can happen when it messes up the tracking though is that your records are offset by a small amount (actions are executed one or two records after/before). There is currently no such situation known fortunately but I take no liability for any failures!
 If you manage to break it please notify me about it and provide me with information of what you've done (through issues) and I try to fix this:)
 
+##Installation
+Simply put the UndoPro folder somewhere in your project and you're good to go! Even though it doesn't have to be in the Editor folder it does not mean you can use it at runtime though! Functionality requiring the Editor API are excluded at runtime by preprocessor checks.
+In the Editor folder on the other hand you find two useful windows to test the functionality of 1. the Undo system itself and 2. the action serialization system. Along with these windows you can debug the system easily yourself to see how it works by uncommenting #define UNDO_DEBUG in UndoProManager!
+In order to just use the action serialization system for your own project just copy the folder UndoPro/SerializableAction along with the license of course!
+
 ##API
 The API for developers is very simple.
 Add the UndoPro dependency and then use UndoProManager to interact with the system. Important elements:
