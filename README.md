@@ -23,15 +23,15 @@ When tracking has been done, a shift value for both undo and redo stack seperate
 On the way of all this, the additional callbacks OnUndoPerformed/OnRedoPerformed/OnAddUndoRecord are called.
 
 ##Serialization of Command-based records
-Serialization is also a big problem, as actions, and even worse anonymous actions, are hard serialize. UndoPro maintains a hidden GameObject in the current scene which is deleted upon scene change which holds all custom records that needs to be serialized. The serialization is achieved by a few wrapper classes that intelligently handle every case of combination.
+Serialization is also a big problem, as actions, and even worse anonymous actions, are hard to serialize. UndoPro maintains a hidden, temporary GameObject in the current scene which holds all custom records that need to be serialized. The serialization is achieved by a few wrapper classes that intelligently handle every combination for Actions, Objects, Methods, etc.
 
 This system can even be used generally!
 -> Supports all serializable objects (of both UnityEngine.Object and System.Object) and unserializable objects partially (one layer serializable member serialization), all other objects get defaulted
--> Supports even most anonymous actions :eek: (no unserializable found yet)! You can fully use the context and reference nearly all local variables (conditions outlined above apply)!
+-> Supports even most anonymous actions (no unserializable found yet)! You can fully use the context and reference nearly all local variables (conditions outlined above apply)!
 
 ##Problems
 This system does seem reliable but I do not claim it is completely bullet-proof!
-In case it messes up the tracking, your records are offset by a small amount (actions are executed one or two records after/before). There is currently no such situation known fortunately but I take no liability for any failures!
+The worst case that can happen when it messes up the tracking though is that your records are offset by a small amount (actions are executed one or two records after/before). There is currently no such situation known fortunately but I take no liability for any failures!
 If you manage to break it please notify me about it and provide me with information of what you've done (through issues) and I try to fix this:)
 
 ##API
