@@ -3,7 +3,7 @@ UndoPro is a command-based undo system integrated into Unity's default system. T
 
 [Forum Thread](https://community.unity.com/t5/Extensions-OnGUI/WIP-Open-Source-UndoPro-Command-pattern-Undo-integration/m-p/2640947)
 
-##Features:
+##Features
 - Extended Callbacks for Undo: Seperate Undo/Redo with record names, OnAddUndoRecord, ...
 - API for creating command-based undo records
 - Handles most anonymous actions without problems, even using the context!
@@ -14,7 +14,7 @@ Unity provides only very limited information about the undo system:
 - The current record/group name (not unique)
 - With reflection, the complete Undo/Redo stack only by name (not unique)
 - UndoRedoPerformed callback
-- 
+
 Internally, UndoPro creates a dummy record in the default system when the API for adding a command-based record is called. This is then tracked using the available callback and the commands are executed when they switch from redo- undo stack or the other way around respectively.
 A big hurden was the behaviour of the default Undo system: it is nearly unpredictable! Records may duplicate in certain conditions when undone/redone, or vanish. It is very hard, but a requirement to make a solid tracking algorithm. Obviously the addition of new records has also to be detected.
 
