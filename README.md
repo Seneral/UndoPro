@@ -1,7 +1,7 @@
 # UndoPro
 UndoPro is a command-based undo system integrated into Unity's default system. This allows devs to use actions for their undo/redo operations without forcing the user into a new undo-workflow!
 
-[Forum Thread](https://community.unity.com/t5/Extensions-OnGUI/WIP-Open-Source-UndoPro-Command-pattern-Undo-integration/m-p/2640947)
+[Forum Thread](http://forum.unity3d.com/threads/wip-open-source-undopro-command-pattern-undo-integration.406131)
 
 ##Features
 - Extended Callbacks for Undo: Seperate Undo/Redo with record names, OnAddUndoRecord, ...
