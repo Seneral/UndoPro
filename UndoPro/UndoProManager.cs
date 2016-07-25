@@ -167,10 +167,6 @@ namespace UndoPro
 			// Make sure this record isn't included in the previous group
 			Undo.IncrementCurrentGroup ();
 
-			// Record operation internally
-			records.UndoRecordsAdded (1);
-			records.undoProRecords.Add (operation);
-
 			// Create a dummy record with the given label
 			if (dummyObject == null)
 				dummyObject = new Texture2D (8, 8);
@@ -180,10 +176,12 @@ namespace UndoPro
 			Undo.FlushUndoRecordObjects ();
 			Undo.IncrementCurrentGroup ();
 
-			// After recording, make the UndoState aware of the new UndoPro operation
-			// No loss of internal information because internal records were updated before
-			// and the new UndoPro operation was added manually to the internal records
+			// Now get the new Undo state
 			records.undoState = FetchUndoState ();
+
+			// Record operation internally
+			records.UndoRecordsAdded (1);
+			records.undoProRecords.Add (operation);
 
 			if (OnAddUndoRecord != null)
 				OnAddUndoRecord.Invoke (new string[] { operation.label }, true);

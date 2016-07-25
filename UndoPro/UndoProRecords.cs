@@ -80,7 +80,9 @@
 			//Debug.Log ("Shifted records by " + addedRecordsCount + " because of new added undo records!");
 			for (int recCnt = 0; recCnt < undoProRecords.Count; recCnt++)
 			{
-				undoProRecords[recCnt].relativeStackPos -= addedRecordsCount; 
+				UndoProRecord record = undoProRecords[recCnt];
+				if (record.relativeStackPos <= 0)
+					record.relativeStackPos -= addedRecordsCount; 
 			}
 		}
 
