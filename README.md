@@ -1,7 +1,7 @@
 # UndoPro
 UndoPro is a command-based undo system integrated into Unity's default system. This allows devs to use actions for their undo/redo operations without forcing the user into a new undo-workflow!
 
-[Forum Thread](https://community.unity.com/t5/Extensions-OnGUI/WIP-Open-Source-UndoPro-Command-pattern-Undo-integration/m-p/2640947)
+[Forum Thread](http://forum.unity3d.com/threads/wip-open-source-undopro-command-pattern-undo-integration.406131)
 
 ##Features
 - Extended Callbacks for Undo: Seperate Undo/Redo with record names, OnAddUndoRecord, ...
@@ -33,6 +33,11 @@ This system can even be used generally!
 This system does seem reliable but I do not claim it is completely bullet-proof!
 The worst case that can happen when it messes up the tracking though is that your records are offset by a small amount (actions are executed one or two records after/before). There is currently no such situation known fortunately but I take no liability for any failures!
 If you manage to break it please notify me about it and provide me with information of what you've done (through issues) and I try to fix this:)
+
+##Installation
+Simply put the UndoPro folder somewhere in your project and you're good to go! Even though it doesn't have to be in the Editor folder it does not mean you can use it at runtime though! Functionality requiring the Editor API are excluded at runtime by preprocessor checks.
+In the Editor folder on the other hand you find two useful windows to test the functionality of 1. the Undo system itself and 2. the action serialization system. Along with these windows you can debug the system easily yourself to see how it works by uncommenting #define UNDO_DEBUG in UndoProManager!
+In order to just use the action serialization system for your own project just copy the folder UndoPro/SerializableAction along with the license of course!
 
 ##API
 The API for developers is very simple.
