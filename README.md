@@ -3,12 +3,12 @@ UndoPro is a command-based undo system integrated into Unity's default system. T
 
 [Forum Thread](http://forum.unity3d.com/threads/wip-open-source-undopro-command-pattern-undo-integration.406131)
 
-##Features
+## Features
 - Extended Callbacks for Undo: Seperate Undo/Redo with record names, OnAddUndoRecord, ...
 - API for creating command-based undo records
 - Handles most anonymous actions without problems, even using the context!
 
-##How it works
+## How it works
 Unity provides only very limited information about the undo system:
 - The ID of the current record, but it's not unique, rather than steadily increasing :/
 - The current record/group name (not unique)
@@ -22,24 +22,24 @@ When tracking has been done, a shift value for both undo and redo stack seperate
 
 On the way of all this, the additional callbacks OnUndoPerformed/OnRedoPerformed/OnAddUndoRecord are called.
 
-##Serialization of Command-based records
+## Serialization of Command-based records
 Serialization is also a big problem, as actions, and even worse anonymous actions, are hard to serialize. UndoPro maintains a hidden, temporary GameObject in the current scene which holds all custom records that need to be serialized. The serialization is achieved by a few wrapper classes that intelligently handle every combination for Actions, Objects, Methods, etc.
 
 This system can even be used generally!
 -> Supports all serializable objects (of both UnityEngine.Object and System.Object) and unserializable objects partially (one layer serializable member serialization), all other objects get defaulted
 -> Supports even most anonymous actions (no unserializable found yet)! You can fully use the context and reference nearly all local variables (conditions outlined above apply)!
 
-##Problems
+## Problems
 This system does seem reliable but I do not claim it is completely bullet-proof!
 The worst case that can happen when it messes up the tracking though is that your records are offset by a small amount (actions are executed one or two records after/before). There is currently no such situation known fortunately but I take no liability for any failures!
 If you manage to break it please notify me about it and provide me with information of what you've done (through issues) and I try to fix this:)
 
-##Installation
+## Installation
 Simply put the UndoPro folder somewhere in your project and you're good to go! Even though it doesn't have to be in the Editor folder it does not mean you can use it at runtime though! Functionality requiring the Editor API are excluded at runtime by preprocessor checks.
 In the Editor folder on the other hand you find two useful windows to test the functionality of 1. the Undo system itself and 2. the action serialization system. Along with these windows you can debug the system easily yourself to see how it works by uncommenting #define UNDO_DEBUG in UndoProManager!
 In order to just use the action serialization system for your own project just copy the folder UndoPro/SerializableAction along with the license of course!
 
-##API
+## API
 The API for developers is very simple.
 Add the UndoPro dependency and then use UndoProManager to interact with the system. Important elements:
 - RecordOpterationAndPerform - Accepts the actions for undo/redo along with a label and adds them as a record. Additionally it will perform the redo action.
@@ -51,5 +51,5 @@ Add the UndoPro dependency and then use UndoProManager to interact with the syst
 
 Recommendation: If you calculated something or performed any operation with an intermediate result, it is very easy to set this up provided the result is serializable. Instead of recalculating in the undo/redo actions just set the previous serializable result in the undo action and the new one in the redo action. Done!
 
-##Author and License
+## Author and License
 This extension was created by [Seneral](https://community.unity.com/t5/user/viewprofilepage/user-id/615187) and is published under the GNU license (further specified in LICENSE.md)
