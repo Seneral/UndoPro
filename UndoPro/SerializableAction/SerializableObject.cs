@@ -39,6 +39,7 @@
 
 			base.Serialize (); // Serialized normally
 
+			manuallySerializedMembers = null;
 			if (unityObject == null && String.IsNullOrEmpty (serializedSystemObject))
 			{ // Object is unserializable so it will later be recreated from the type, now serialize the serializable field values of the object
 				FieldInfo[] fields = objectType.type.GetFields (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
@@ -51,18 +52,17 @@
 		/// </summary>
 		protected override void Deserialize ()
 		{
-			Object = null;
 			if (isNullObject)
 				return;
 
 			base.Deserialize (); // Deserialize normally
 
-			if ((Object == null || !Object.GetType ().IsSerializable) && manuallySerializedMembers != null)
+			if ((Object == null || !Object.GetType ().IsSerializable) && manuallySerializedMembers != null && manuallySerializedMembers.Count > 0)
 			{ // This object ha an unserializable type, and previously the object was recreated from that type
 				// Now, restore the serialized field values of the object
 				FieldInfo[] fields = objectType.type.GetFields (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 				if (fields.Length != manuallySerializedMembers.Count)
-					Debug.LogError ("Field length and serialized member length doesn't match (" + fields.Length + ":" + manuallySerializedMembers.Count + ")!");
+					Debug.LogError ("Field length and serialized member length doesn't match (" + fields.Length + ":" + manuallySerializedMembers.Count + ") for object " + objectType.type.Name + "!");
 				foreach (FieldInfo field in fields)
 				{
 					SerializableObjectOneLevel matchObj = manuallySerializedMembers.Find ((SerializableObjectOneLevel obj) => obj.Name == field.Name && obj.Object.GetType () == field.FieldType);
@@ -164,7 +164,7 @@
 			}
 
 			if (Object == null)
-				throw new DataMisalignedException ("Could not deserialize object of type '" + objectType.type + "'!");
+				throw new DataMisalignedException ("Could not deserialize object of type '" + objectType.type.Name + "'!");
 		}
 
 		#endregion
