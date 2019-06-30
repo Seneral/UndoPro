@@ -14,21 +14,124 @@
 	[Serializable]
 	public class SerializableObject : SerializableObjectOneLevel
 	{
-		[SerializeField] 
-		private List<SerializableObjectOneLevel> manuallySerializedMembers;
+		[SerializeField]
+		private List<SerializableObjectTwoLevel> manuallySerializedMembers;
+		[SerializeField]
+		protected List<SerializableObjectTwoLevel> collectionObjects;
 
 		/// <summary>
 		/// Create a new SerializableObject from an arbitrary object
 		/// </summary>
-		public SerializableObject (object srcObject) : base (srcObject) { }
+		public SerializableObject(object srcObject) : base(srcObject) { }
 		/// <summary>
 		/// Create a new SerializableObject from an arbitrary object with the specified name
 		/// </summary>
 		public SerializableObject(object srcObject, string name) : base(srcObject, name) { }
+
+		#region Serialization
+
 		/// <summary>
-		/// Constructor required for serialization. Don't use
+		/// Serializes the given object and stores it into this SerializableObject
 		/// </summary>
-		public SerializableObject() : base() { }
+		protected override void Serialize()
+		{
+			if (isNullObject = _object == null)
+				return;
+
+			base.Serialize(); // Serialized normally
+
+			if (_object.GetType().IsGenericType &&
+				typeof(ICollection<>).MakeGenericType(_object.GetType().GetGenericArguments()).IsAssignableFrom(_object.GetType()))
+			{
+				IEnumerable collection = _object as IEnumerable;
+				collectionObjects = new List<SerializableObjectTwoLevel>();
+				foreach (object obj in collection)
+					collectionObjects.Add(new SerializableObjectTwoLevel(obj));
+			}
+			else if (typeof(UnityEngine.Object).IsAssignableFrom(_object.GetType())) { }
+			else if (_object.GetType().IsSerializable) { }
+			else
+			{ // Object is unserializable so it will later be recreated from the type, now serialize the serializable field values of the object
+				FieldInfo[] fields = objectType.type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+				manuallySerializedMembers = new List<SerializableObjectTwoLevel>();
+				foreach (FieldInfo field in fields)
+					manuallySerializedMembers.Add(new SerializableObjectTwoLevel(field.GetValue(_object), field.Name));
+				//manuallySerializedMembers = fields.Select ((FieldInfo field) => new SerializableObjectOneLevel (field.GetValue (_object), field.Name)).ToList ();
+			}
+		}
+
+		/// <summary>
+		/// Deserializes this SerializableObject
+		/// </summary>
+		protected override void Deserialize()
+		{
+			if (isNullObject)
+				return;
+
+			base.Deserialize(); // Deserialize normally
+
+			Type type = objectType.type;
+			if (type.IsGenericType &&
+				typeof(ICollection<>).MakeGenericType(type.GetGenericArguments()).IsAssignableFrom(type))
+			{
+				if (collectionObjects != null && collectionObjects.Count > 0)
+				{ // Add deserialized objects to collection
+					MethodInfo add = type.GetMethod("Add");
+					foreach (SerializableObjectTwoLevel obj in collectionObjects)
+						add.Invoke(_object, new object[] { obj.Object });
+				}
+			}
+			else if (typeof(UnityEngine.Object).IsAssignableFrom(type))
+				_object = unityObject;
+			else if (type.IsSerializable)
+				_object = DeserializeFromString<System.Object>(serializedSystemObject);
+			else if (manuallySerializedMembers != null && manuallySerializedMembers.Count > 0)
+			{ // This object is an unserializable type, and previously the object was recreated from that type
+			  // Now, restore the serialized field values of the object
+				FieldInfo[] fields = objectType.type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+				if (fields.Length != manuallySerializedMembers.Count)
+					Debug.LogError("Field length and serialized member length doesn't match (" + fields.Length + ":" + manuallySerializedMembers.Count + ") for object " + objectType.type.Name + "!");
+				foreach (FieldInfo field in fields)
+				{
+					SerializableObjectTwoLevel matchObj = manuallySerializedMembers.Find((SerializableObjectTwoLevel obj) => obj.Name == field.Name);
+					if (matchObj != null)
+					{
+						object obj = null;
+						if (matchObj.Object == null) { }
+						else if (!field.FieldType.IsAssignableFrom(matchObj.Object.GetType()))
+							Debug.LogWarning("Deserialized object type " + matchObj.Object.GetType().Name + " is incompatible to field type " + field.FieldType.Name + "!");
+						else
+							obj = matchObj.Object;
+						field.SetValue(Object, obj);
+					}
+					else
+						Debug.LogWarning("Couldn't find a matching serialized field for '" + (field.IsPublic ? "public" : "private") + (field.IsStatic ? " static" : "") + " " + field.FieldType.FullName + "'!");
+				}
+			}
+		}
+
+		#endregion
+	}
+
+	/// <summary>
+	/// Wrapper for an arbitrary object that handles basic serialization, both System.Object, UnityEngine.Object, and even basic unserializable types (the same way, but one-level only, unserializable members will be default or null if previously null)
+	/// </summary>
+	[Serializable]
+	public class SerializableObjectTwoLevel : SerializableObjectOneLevel
+	{
+		[SerializeField] 
+		private List<SerializableObjectOneLevel> manuallySerializedMembers;
+		[SerializeField]
+		protected List<SerializableObjectOneLevel> collectionObjects;
+
+		/// <summary>
+		/// Create a new SerializableObject from an arbitrary object
+		/// </summary>
+		public SerializableObjectTwoLevel (object srcObject) : base (srcObject) { }
+		/// <summary>
+		/// Create a new SerializableObject from an arbitrary object with the specified name
+		/// </summary>
+		public SerializableObjectTwoLevel (object srcObject, string name) : base(srcObject, name) { }
 
 		#region Serialization
 
@@ -42,10 +145,19 @@
 
 			base.Serialize (); // Serialized normally
 
-			manuallySerializedMembers = null;
-			if (unityObject == null && String.IsNullOrEmpty (serializedSystemObject) && collectionObjects == null)
+			if (_object.GetType().IsGenericType &&
+				typeof(ICollection<>).MakeGenericType(_object.GetType().GetGenericArguments()).IsAssignableFrom(_object.GetType()))
+			{
+				IEnumerable collection = _object as IEnumerable;
+				collectionObjects = new List<SerializableObjectOneLevel>();
+				foreach (object obj in collection)
+					collectionObjects.Add(new SerializableObjectOneLevel(obj));
+			}
+			else if (typeof(UnityEngine.Object).IsAssignableFrom(_object.GetType())) { }
+			else if (_object.GetType().IsSerializable) { }
+			else
 			{ // Object is unserializable so it will later be recreated from the type, now serialize the serializable field values of the object
-				FieldInfo[] fields = objectType.type.GetFields (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+				FieldInfo[] fields = objectType.type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 				manuallySerializedMembers = new List<SerializableObjectOneLevel>();
 				foreach (FieldInfo field in fields)
 					manuallySerializedMembers.Add(new SerializableObjectOneLevel(field.GetValue(_object), field.Name));
@@ -63,8 +175,23 @@
 
 			base.Deserialize (); // Deserialize normally
 
-			if ((_object == null || !_object.GetType ().IsSerializable) && manuallySerializedMembers != null && manuallySerializedMembers.Count > 0)
-			{ // This object ha an unserializable type, and previously the object was recreated from that type
+			Type type = objectType.type;
+			if (type.IsGenericType &&
+				typeof(ICollection<>).MakeGenericType(type.GetGenericArguments()).IsAssignableFrom(type))
+			{ 
+				if (collectionObjects != null && collectionObjects.Count > 0)
+				{ // Add deserialized objects to collection
+					MethodInfo add = type.GetMethod("Add");
+					foreach (SerializableObjectOneLevel obj in collectionObjects)
+						add.Invoke(_object, new object[] { obj.Object });
+				}
+			}
+			else if (typeof(UnityEngine.Object).IsAssignableFrom(type))
+				_object = unityObject;
+			else if (type.IsSerializable)
+				_object = DeserializeFromString<System.Object>(serializedSystemObject);
+			else if (manuallySerializedMembers != null && manuallySerializedMembers.Count > 0)
+			{ // This object is an unserializable type, and previously the object was recreated from that type
 				// Now, restore the serialized field values of the object
 				FieldInfo[] fields = objectType.type.GetFields (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 				if (fields.Length != manuallySerializedMembers.Count)
@@ -75,7 +202,7 @@
 					if (matchObj != null)
 					{
 						object obj = null;
-						if (matchObj.Object == null);
+						if (matchObj.Object == null) { }
 						else if (!field.FieldType.IsAssignableFrom(matchObj.Object.GetType()))
 							Debug.LogWarning("Deserialized object type " + matchObj.Object.GetType().Name + " is incompatible to field type " + field.FieldType.Name + "!");
 						else
@@ -85,7 +212,6 @@
 					else
 						Debug.LogWarning("Couldn't find a matching serialized field for '" + (field.IsPublic ? "public" : "private") + (field.IsStatic ? " static" : "") + " " + field.FieldType.FullName + "'!");
 				}
-				manuallySerializedMembers = null;
 			}
 		}
 
@@ -119,8 +245,6 @@
 		protected SerializableType objectType;
 		[SerializeField] 
 		protected UnityEngine.Object unityObject;
-		[SerializeField]
-		protected List<SerializableObject> collectionObjects;
 		[SerializeField] 
 		protected string serializedSystemObject;
 
@@ -135,11 +259,6 @@
 			_object = srcObject;
 			Name = name;
 			Serialize();
-		}
-
-		public SerializableObjectOneLevel()
-		{
-			collectionObjects = null;
 		}
 
 		#region Serialization
@@ -158,12 +277,7 @@
 			
 			if (_object.GetType().IsGenericType &&
 				typeof(ICollection<>).MakeGenericType(_object.GetType().GetGenericArguments()).IsAssignableFrom(_object.GetType()))
-			{
-				//Type[] collectionType = _object.GetType().GetGenericArguments();
-				IEnumerable collection = _object as IEnumerable;
-				collectionObjects = new List<SerializableObject>();
-				foreach (object obj in collection)
-					collectionObjects.Add(new SerializableObject(obj));
+			{ // If levels are free to serialize, then they will get serialized, if not, then not
 			}
 			else if (typeof(UnityEngine.Object).IsAssignableFrom(_object.GetType()))
 			{
@@ -192,14 +306,8 @@
 
 			if (type.IsGenericType &&
 				typeof(ICollection<>).MakeGenericType(type.GetGenericArguments()).IsAssignableFrom(type))
-			{
+			{ // Collection type, if still more levels free, members will be serialized, if not, then not 
 				_object = Activator.CreateInstance(type);
-				if (collectionObjects != null && collectionObjects.Count > 0)
-				{
-					MethodInfo add = type.GetMethod("Add");
-					foreach (SerializableObject obj in collectionObjects)
-						add.Invoke(_object, new object[] { obj.Object });
-				}
 			}
 			else if (typeof(UnityEngine.Object).IsAssignableFrom(type))
 				_object = unityObject;
@@ -210,8 +318,9 @@
 				_object = Activator.CreateInstance(type);
 			}
 
-			if (_object == null)
-				Debug.LogError ("Could not deserialize object of type '" + type.Name + "'!");
+			// Not always critical. Can happen if GC or Unity deleted those references
+			// if (_object == null)
+			//	Debug.LogWarning ("Could not deserialize object of type '" + type.Name + "'!");
 		}
 
 		#endregion
@@ -234,7 +343,7 @@
 					return Convert.ToBase64String(stream.ToArray());
 				}
 			}
-			catch (System.Runtime.Serialization.SerializationException ex)
+			catch (System.Runtime.Serialization.SerializationException)
 			{
 				Debug.LogWarning("Failed to serialize " + value.GetType().ToString());
 				return null;
