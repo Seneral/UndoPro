@@ -32,6 +32,12 @@ namespace UndoPro
 
 		#region General 
 
+		[MenuItem("Edit/Reset UndoPro", false, 10)]
+		private static void ResetUndoPro()
+		{
+			CreateRecords();
+		}
+
 		[MenuItem ("Edit/Toggle UndoPro", false, 10)]
 		private static void ToggleUndoPro () 
 		{
@@ -138,12 +144,35 @@ namespace UndoPro
 
 		#region Custom Undo Recording
 
+		private static bool inRecordStack = false;
+		private static bool firstInRecordStack = true;
+
+		/// <summary>
+		/// Begin merging multiple singular undo operations into one group that get's treated as one
+		/// </summary>
+		public static void BeginRecordStack()
+		{
+			inRecordStack = true;
+			firstInRecordStack = true;
+			Undo.IncrementCurrentGroup();
+		}
+
+		/// <summary>
+		/// End merging multiple singular undo operations into one group that get's treated as one
+		/// </summary>
+		public static void EndRecordStack()
+		{
+			Undo.FlushUndoRecordObjects();
+			Undo.IncrementCurrentGroup();
+			inRecordStack = false;
+		}
+
 		/// <summary>
 		/// Records a custom operation with given label and actions and executes the operation (perform)
 		/// </summary>
-		public static void RecordOperationAndPerform (Action perform, Action undo, string label) 
+		public static void RecordOperationAndPerform (Action perform, Action undo, string label, bool mergeBefore = false, bool mergeAfter = false) 
 		{
-			RecordOperation (new UndoProRecord (perform, undo, label, 0));
+			RecordOperation (new UndoProRecord (perform, undo, label, 0), mergeBefore, mergeAfter);
 			if (perform != null)
 				perform.Invoke ();
 		}
@@ -151,21 +180,22 @@ namespace UndoPro
 		/// <summary>
 		/// Records a custom operation with given label and actions
 		/// </summary>
-		public static void RecordOperation (Action perform, Action undo, string label) 
+		public static void RecordOperation (Action perform, Action undo, string label, bool mergeBefore = false, bool mergeAfter = false)
 		{
-			RecordOperation (new UndoProRecord (perform, undo, label, 0));
+			RecordOperation (new UndoProRecord (perform, undo, label, 0), mergeBefore, mergeAfter);
 		}
 
 		/// <summary>
 		/// Records the given operation
 		/// </summary>
-		private static void RecordOperation (UndoProRecord operation) 
+		private static void RecordOperation (UndoProRecord operation, bool mergeBefore = false, bool mergeAfter = false)
 		{
 			// First, make sure the internal records representation is updated
 			UpdateUndoRecords ();
 
 			// Make sure this record isn't included in the previous group
-			Undo.IncrementCurrentGroup ();
+			if (!mergeBefore && !inRecordStack)
+				Undo.IncrementCurrentGroup ();
 
 			// Create a dummy record with the given label
 			if (dummyObject == null)
@@ -173,14 +203,19 @@ namespace UndoPro
 			Undo.RegisterCompleteObjectUndo (dummyObject, operation.label);
 
 			// Make sure future undo records are not included into this group
-			Undo.FlushUndoRecordObjects ();
-			Undo.IncrementCurrentGroup ();
+			if (!mergeAfter && !inRecordStack)
+			{
+				Undo.FlushUndoRecordObjects();
+				Undo.IncrementCurrentGroup();
+			}
 
 			// Now get the new Undo state
 			records.undoState = FetchUndoState ();
 
 			// Record operation internally
-			records.UndoRecordsAdded (1);
+			if (!inRecordStack || firstInRecordStack)
+				records.UndoRecordsAdded (1);
+			firstInRecordStack = false;
 			records.undoProRecords.Add (operation);
 
 			if (OnAddUndoRecord != null)
@@ -223,17 +258,24 @@ namespace UndoPro
 
 			// Fetch new undo records
 			int addedUndoCount = newState.undoRecords.Count-prevState.undoRecords.Count;
-		#if UNDO_DEBUG
-			Debug.Log ("Checking for update... change detected! Added Undo's: " + addedUndoCount);
-		#endif
 			if (addedUndoCount < 0)
 			{ // This happens only when the undo was erased, for example after switching the scene
+#if UNDO_DEBUG
+				string[] undosRemoved = prevState.undoRecords.GetRange(prevState.undoRecords.Count + addedUndoCount, -addedUndoCount).ToArray();
+				string undoRemLog = "" + (-addedUndoCount) + " undo records removed: ";
+				for (int undoCnt = 0; undoCnt < undosRemoved.Length; undoCnt++)
+					undoRemLog += undosRemoved[undoCnt] + "; ";
+				Debug.Log(undoRemLog);
+#endif
+
 				if (newState.undoRecords.Count != 0)
-				{
+				{ // Attempt to salvage the undo records that are left
+					records.UndoRecordsAdded(addedUndoCount);
 					records.ClearRedo ();
 					Debug.LogWarning ("Cleared Redo because some undos were removed!");
 				}
-				CreateRecords ();
+				else
+					CreateRecords ();
 				return;
 			}
 

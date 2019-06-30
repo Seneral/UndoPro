@@ -73,8 +73,6 @@
 		/// </summary>
 		public void UndoRecordsAdded (int addedRecordsCount) 
 		{
-			if (addedRecordsCount <= 0)
-				return;
 			if (undoState.redoRecords.Count == 0)
 				ClearRedo ();
 			//Debug.Log ("Shifted records by " + addedRecordsCount + " because of new added undo records!");

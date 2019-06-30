@@ -83,60 +83,45 @@ public class UndoProTestWindow : EditorWindow
 
 		maxRecordCount = EditorGUILayout.IntSlider ("Max shown records", maxRecordCount, 0, 20);
 
-		EditorGUILayout.Space ();
+		EditorGUILayout.Space();
 
-		GUILayout.BeginHorizontal ();
-		// Undo's
-		GUILayout.BeginVertical ();
-		GUILayout.Label ("UNDO:");
-		for (int cnt = 0; cnt <  Math.Min (state.undoRecords.Count, maxRecordCount); cnt++)
+		GUILayout.BeginHorizontal();
+
+		GUILayout.BeginVertical(GUILayout.Width(EditorGUIUtility.currentViewWidth/2));
+		GUILayout.Label("UNDO:");
+		for (int cnt = 0; cnt < Math.Min(state.undoRecords.Count, maxRecordCount); cnt++)
 		{
-			int index = state.undoRecords.Count-1-cnt;
-			GUILayout.Label ("Undo " + index + ": " + state.undoRecords[index]);
+			int index = state.undoRecords.Count - 1 - cnt;
+			string rec = state.undoRecords[index];
+			List<UndoProRecord> proRecords = records.proUndoStack.FindAll(r => r.relativeStackPos == -cnt);
+			int matchInd = proRecords.FindIndex(r => r.label == rec);
+			string proRec = "";
+			for (int i = 0; i < proRecords.Count; i++)
+				if (i != matchInd) proRec += " / " + proRecords[i].label;
+			GUILayout.Label("Undo " + index + ": " + rec + proRec, 
+				matchInd == -1? EditorStyles.label : EditorStyles.boldLabel, 
+				GUILayout.MaxWidth(EditorGUIUtility.currentViewWidth / 2));
 		}
-		GUILayout.EndVertical ();
-		// Redo's
-		GUILayout.BeginVertical ();
-		GUILayout.Label ("REDO:");
-		for (int cnt = 0; cnt <  Math.Min (state.redoRecords.Count, maxRecordCount); cnt++)
+		GUILayout.EndVertical();
+
+		GUILayout.BeginVertical();
+		GUILayout.Label("REDO:");
+		for (int cnt = 0; cnt < Math.Min(state.redoRecords.Count, maxRecordCount); cnt++)
 		{
-			int index = state.redoRecords.Count-1-cnt;
-			GUILayout.Label ("Redo " + index + ": " + state.redoRecords[index]);
+			int index = state.redoRecords.Count - 1 - cnt;
+			string rec = state.redoRecords[index];
+			List<UndoProRecord> proRecords = records.proRedoStack.FindAll(r => r.relativeStackPos == cnt+1);
+			int matchInd = proRecords.FindIndex(r => r.label == rec);
+			string proRec = "";
+			for (int i = 0; i < proRecords.Count; i++)
+				if (i != matchInd) proRec += " / " + proRecords[i].label;
+			GUILayout.Label("Redo " + index + ": " + rec + proRec, matchInd == -1 ? EditorStyles.label : EditorStyles.boldLabel);
 		}
-		GUILayout.EndVertical ();
-		GUILayout.EndHorizontal ();
+		GUILayout.EndVertical();
 
+		GUILayout.EndHorizontal();
 
-		EditorGUILayout.Space ();
-		EditorGUILayout.Space ();
-
-
-		GUILayout.Label ("--- PRO RECORDS:");
-
-		GUILayout.BeginHorizontal ();
-		// Undo's
-		GUILayout.BeginVertical ();
-		GUILayout.Label ("UNDO:");
-		List<UndoProRecord> undoStack = records.proUndoStack;
-		for (int cnt = 0; cnt <  Math.Min (undoStack.Count, maxRecordCount); cnt++)
-		{
-			UndoProRecord rec = undoStack[undoStack.Count-1-cnt];
-			GUILayout.Label ("Undo " + (state.undoRecords.Count-1+rec.relativeStackPos) + "(" + rec.relativeStackPos + "): " + rec.label);
-		}
-		GUILayout.EndVertical ();
-		// Redo's
-		GUILayout.BeginVertical ();
-		GUILayout.Label ("REDO:");
-		List<UndoProRecord> redoStack = records.proRedoStack;
-		for (int cnt = 0; cnt <  Math.Min (redoStack.Count, maxRecordCount); cnt++)
-		{
-			UndoProRecord rec = redoStack[redoStack.Count-1-cnt];
-			GUILayout.Label ("Redo " + (state.redoRecords.Count-rec.relativeStackPos) + "(" + rec.relativeStackPos + "): " + rec.label);
-		}
-		GUILayout.EndVertical ();
-		GUILayout.EndHorizontal ();
-
-		EditorGUILayout.Space ();
+		EditorGUILayout.Space();
 
 		GUILayout.Label ("Current Group " + Undo.GetCurrentGroupName () + " : " + Undo.GetCurrentGroup () + " ---");
 	}

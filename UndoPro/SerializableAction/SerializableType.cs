@@ -12,9 +12,18 @@
 	/// Serialized Data contains assembly type name and generic arguments (one level) only.
 	/// </summary>
 	[System.Serializable]
-	public class SerializableType : ISerializationCallbackReceiver
+	public class SerializableType
 	{
-		public Type type;
+		public Type _type;
+		public Type type
+		{
+			get
+			{
+				if (_type == null)
+					Deserialize();
+				return _type;
+			}
+		}
 
 		[SerializeField]
 		private string typeName;
@@ -25,50 +34,51 @@
 
 		public SerializableType (Type Type)
 		{
-			type = Type;
+			_type = Type;
+			Serialize();
 		}
 
 		#region Serialization
 
-		public void OnBeforeSerialize ()
+		public void Serialize ()
 		{
-			if (type == null)
+			if (_type == null)
 			{
 				typeName = String.Empty;
 				genericTypes = null;
 				return;
 			}
 
-			if (type.IsGenericType)
+			if (_type.IsGenericType)
 			{ // Generic type
-				typeName = type.GetGenericTypeDefinition ().AssemblyQualifiedName;
-				genericTypes = type.GetGenericArguments ().Select ((Type t) => t.AssemblyQualifiedName).ToArray ();
+				typeName = _type.GetGenericTypeDefinition ().AssemblyQualifiedName;
+				genericTypes = _type.GetGenericArguments ().Select ((Type t) => t.AssemblyQualifiedName).ToArray ();
 			}
 			else
 			{ // Normal type
-				typeName = type.AssemblyQualifiedName;
+				typeName = _type.AssemblyQualifiedName;
 				genericTypes = null;
 			}
 		}
 
-		public void OnAfterDeserialize ()
+		public void Deserialize ()
 		{
 			if (String.IsNullOrEmpty (typeName))
 				return;
 
-			type = Type.GetType (typeName);
-			if (type == null)
+			_type = Type.GetType (typeName);
+			if (_type == null)
 				throw new Exception ("Could not deserialize type '" + typeName + "'!");
 
-			if (type.IsGenericTypeDefinition && genericTypes != null && genericTypes.Length > 0)
+			if (_type.IsGenericTypeDefinition && genericTypes != null && genericTypes.Length > 0)
 			{ // Generic type
 				Type[] genArgs = new Type[genericTypes.Length];
 				for (int i = 0; i < genericTypes.Length; i++)
 					genArgs[i] = Type.GetType (genericTypes[i]);
 
-				Type genType = type.MakeGenericType (genArgs);
+				Type genType = _type.MakeGenericType (genArgs);
 				if (genType != null)
-					type = genType;
+					_type = genType;
 				else 
 					Debug.LogError ("Could not make generic-type definition '" + typeName + "' generic!");
 			}
