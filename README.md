@@ -52,4 +52,4 @@ Add the UndoPro dependency and then use UndoProManager to interact with the syst
 Recommendation: If you calculated something or performed any operation with an intermediate result, it is very easy to set this up provided the result is serializable. Instead of recalculating in the undo/redo actions just set the previous serializable result in the undo action and the new one in the redo action. Done!
 
 ## Author and License
-This extension was created by [Seneral](https://community.unity.com/t5/user/viewprofilepage/user-id/615187) and is published under the GNU license (further specified in LICENSE.md)
+This extension was created by [Seneral](https://www.seneral.dev/) and is published under the MIT license (further specified in LICENSE.md)
