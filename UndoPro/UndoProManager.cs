@@ -32,13 +32,11 @@ namespace UndoPro
 
 		#region General 
 
-		[MenuItem("Edit/Reset UndoPro", false, 10)]
 		private static void ResetUndoPro()
 		{
 			CreateRecords();
 		}
 
-		[MenuItem ("Edit/Toggle UndoPro", false, 10)]
 		private static void ToggleUndoPro () 
 		{
 			if (!enabled) 

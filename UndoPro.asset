@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a29f67b488b4458983fd973bbda8c8fa, type: 3}
+  m_Name: UndoPro
+  m_EditorClassIdentifier: 
+  packageSourcePaths:
+  - Assets/UndoPro
+  packageIgnorePaths: []
+  packageDestinationPath: PkgExport
+  legacyPackageDestinationPath: 
+  packageName: com.seneral.undopro
+  displayName: UndoPro
+  packageVersion: 1.0.0
+  unityVersion: 2018.1
+  description: UndoPro is a command-based undo system integrated into Unity's default
+    system
+  category: 
+  keywords: []
+  dependencies: []
+  _id: 0b8f93d6-1c9b-40f7-83d2-6507e5990821
