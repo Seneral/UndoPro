@@ -3,6 +3,24 @@ UndoPro is a command-based undo system integrated into Unity's default system. T
 
 [Forum Thread](http://forum.unity3d.com/threads/wip-open-source-undopro-command-pattern-undo-integration.406131)
 
+# Install
+Depending on how you want to use UndoPro / distribute your tool, you have several options.
+1. Unity Package Manager (recommended)
+  Go to Unity Package Manager, add by git url, and enter: https://github.com/Seneral/UndoPro.git#release-pkg
+  Alternatively, choose a specific version: https://github.com/Seneral/UndoPro.git#v1.0.0-lts
+  Or download from release-pkg branch and install from disk on earlier unity versions
+  If you distribute your tool based on UndoPro your users would have to manually install UndoPro first, then your tool
+  But this option is the most compatible with other tools using UndoPro and also can automatically update
+2. Install and distribute UndoPro separately
+  Second best options, don't modify UndoPro and you'll be able to distribute it fine as long as all involved tools keep the GUIDs intact
+  But you'll run into problems when Unity breaks UndoPro and a hot fix is needed to make it work, 
+    but you or other tools still distribute older UndoPro versions alongside your tool
+3. Embed UndoPro into your project
+  Absolutely make sure to change all GUIDs, and wrap all UndoPro code into separate namespaces, 
+    and also modify the assembly definitions, else it will conflict with other tools.
+  Not recommended, as you will solely be responsible for making sure the UndoPro version you distribute is up to date.
+  Only do this if you absolutely need a specific version of UndoPro or you want to modify it before using it in your tool.
+
 ## Features
 - Extended Callbacks for Undo: Seperate Undo/Redo with record names, OnAddUndoRecord, ...
 - API for creating command-based undo records
