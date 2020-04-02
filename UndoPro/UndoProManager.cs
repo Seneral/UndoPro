@@ -32,13 +32,11 @@ namespace UndoPro
 
 		#region General 
 
-		[MenuItem("Edit/Reset UndoPro", false, 10)]
 		private static void ResetUndoPro()
 		{
 			CreateRecords();
 		}
 
-		[MenuItem ("Edit/Toggle UndoPro", false, 10)]
 		private static void ToggleUndoPro () 
 		{
 			if (!enabled) 
@@ -75,8 +73,13 @@ namespace UndoPro
 			Undo.undoRedoPerformed += UndoRedoPerformed;
 			EditorApplication.update -= Update;
 			EditorApplication.update += Update;
-			EditorApplication.playModeStateChanged -= PlaymodeStateChange;
-			EditorApplication.playModeStateChanged += PlaymodeStateChange;
+#if UNITY_2017_2_OR_NEWER
+			EditorApplication.playModeStateChanged -= PlayModeStateChanged;
+			EditorApplication.playModeStateChanged += PlayModeStateChanged;
+#else
+			EditorApplication.playmodeStateChanged -= PlaymodeStateChanged;
+			EditorApplication.playmodeStateChanged += PlaymodeStateChanged;
+#endif
 
 			// Fetch Reflection members for Undo interaction
 			Assembly UnityEditorAsssembly = Assembly.GetAssembly (typeof(UnityEditor.Editor));
@@ -135,7 +138,11 @@ namespace UndoPro
 			// Unsubscribe from every event
 			Undo.undoRedoPerformed -= UndoRedoPerformed;
 			EditorApplication.update -= Update;
-			EditorApplication.playModeStateChanged -= PlaymodeStateChange;
+#if UNITY_2017_2_OR_NEWER
+			EditorApplication.playModeStateChanged -= PlayModeStateChanged;
+#else
+			EditorApplication.playmodeStateChanged -= PlaymodeStateChanged;
+#endif
 
 			// Discard now unused objects
 			dummyObject = null;
@@ -243,11 +250,18 @@ namespace UndoPro
 			lastFrameUndoRedoPerformed = false;
 		}
 
-		private static void PlaymodeStateChange(PlayModeStateChange change)
+#if UNITY_2017_2_OR_NEWER
+		private static void PlayModeStateChanged(PlayModeStateChange change)
 		{
 			if (change == PlayModeStateChange.EnteredEditMode)
 				UpdateUndoRecords();
 		}
+#else
+		private static void PlaymodeStateChanged()
+		{
+			UpdateUndoRecords();
+		}
+#endif
 
 		/// <summary>
 		/// Check the current undoState for any added undo records and updates the internal records accordingly
