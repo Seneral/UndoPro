@@ -84,7 +84,12 @@ namespace UndoPro
 			// Fetch Reflection members for Undo interaction
 			Assembly UnityEditorAsssembly = Assembly.GetAssembly (typeof(UnityEditor.Editor));
 			Type undoType = UnityEditorAsssembly.GetType ("UnityEditor.Undo");
+			
+#if UNITY_2021_2_OR_NEWER
+			MethodInfo getRecordsInternal = undoType.GetMethod ("GetTimelineRecordsInternal", BindingFlags.NonPublic | BindingFlags.Static);
+#else 
 			MethodInfo getRecordsInternal = undoType.GetMethod ("GetRecordsInternal", BindingFlags.NonPublic | BindingFlags.Static);
+#endif
 			getRecordsInternalDelegate = (Action<object, object>)Delegate.CreateDelegate (typeof(Action<object, object>), getRecordsInternal);
 
 			// Create dummy object
