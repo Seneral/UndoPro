@@ -73,13 +73,23 @@ namespace UndoPro
 			Undo.undoRedoPerformed += UndoRedoPerformed;
 			EditorApplication.update -= Update;
 			EditorApplication.update += Update;
-			EditorApplication.playModeStateChanged -= PlaymodeStateChange;
-			EditorApplication.playModeStateChanged += PlaymodeStateChange;
+#if UNITY_2017_2_OR_NEWER
+			EditorApplication.playModeStateChanged -= PlayModeStateChanged;
+			EditorApplication.playModeStateChanged += PlayModeStateChanged;
+#else
+			EditorApplication.playmodeStateChanged -= PlaymodeStateChanged;
+			EditorApplication.playmodeStateChanged += PlaymodeStateChanged;
+#endif
 
 			// Fetch Reflection members for Undo interaction
 			Assembly UnityEditorAsssembly = Assembly.GetAssembly (typeof(UnityEditor.Editor));
 			Type undoType = UnityEditorAsssembly.GetType ("UnityEditor.Undo");
+			
+#if UNITY_2021_2_OR_NEWER
+			MethodInfo getRecordsInternal = undoType.GetMethod ("GetTimelineRecordsInternal", BindingFlags.NonPublic | BindingFlags.Static);
+#else 
 			MethodInfo getRecordsInternal = undoType.GetMethod ("GetRecordsInternal", BindingFlags.NonPublic | BindingFlags.Static);
+#endif
 			getRecordsInternalDelegate = (Action<object, object>)Delegate.CreateDelegate (typeof(Action<object, object>), getRecordsInternal);
 
 			// Create dummy object
@@ -133,7 +143,11 @@ namespace UndoPro
 			// Unsubscribe from every event
 			Undo.undoRedoPerformed -= UndoRedoPerformed;
 			EditorApplication.update -= Update;
-			EditorApplication.playModeStateChanged -= PlaymodeStateChange;
+#if UNITY_2017_2_OR_NEWER
+			EditorApplication.playModeStateChanged -= PlayModeStateChanged;
+#else
+			EditorApplication.playmodeStateChanged -= PlaymodeStateChanged;
+#endif
 
 			// Discard now unused objects
 			dummyObject = null;
@@ -241,11 +255,18 @@ namespace UndoPro
 			lastFrameUndoRedoPerformed = false;
 		}
 
-		private static void PlaymodeStateChange(PlayModeStateChange change)
+#if UNITY_2017_2_OR_NEWER
+		private static void PlayModeStateChanged(PlayModeStateChange change)
 		{
 			if (change == PlayModeStateChange.EnteredEditMode)
 				UpdateUndoRecords();
 		}
+#else
+		private static void PlaymodeStateChanged()
+		{
+			UpdateUndoRecords();
+		}
+#endif
 
 		/// <summary>
 		/// Check the current undoState for any added undo records and updates the internal records accordingly
