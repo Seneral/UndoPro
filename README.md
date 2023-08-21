@@ -7,7 +7,6 @@ UndoPro is a command-based undo system integrated into Unity's default system. T
 Depending on how you want to use UndoPro / distribute your tool, you have several options.
 1. Unity Package Manager (recommended) <br>
   Go to Unity Package Manager, add by git url, and enter: https://github.com/Seneral/UndoPro.git#release-pkg <br>
-  Alternatively, choose a specific version: https://github.com/Seneral/UndoPro.git#v1.0.0-lts <br>
   Or download from release-pkg branch and install from disk on earlier unity versions <br>
   If you distribute your tool based on UndoPro your users would have to manually install UndoPro first, then your tool <br>
   But this option is the most compatible with other tools using UndoPro and also can automatically update
